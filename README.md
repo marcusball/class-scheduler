@@ -8,8 +8,8 @@
 
 ### Prerequisites 
 
-[Install Git](https://git-scm.com/)
-[Install Rust](https://www.rust-lang.org/)
+* [Install Git](https://git-scm.com/)
+* [Install Rust](https://www.rust-lang.org/)
 
 [Clone](https://help.github.com/articles/cloning-a-repository/) this repository into the folder of your choice:
 
