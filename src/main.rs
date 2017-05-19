@@ -11,6 +11,7 @@ use std::io::prelude::*;
 use regex::Regex;
 use std::str::FromStr;
 use std::ops::Range;
+use std::collections::HashMap;
 
 #[derive(Debug, Deserialize)]
 struct ScheduleOptions {
@@ -32,7 +33,7 @@ struct Class {
 
 type Section = Vec<String>;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone, Hash)]
 struct Period(Day, u8);
 
 struct Session {
@@ -41,7 +42,9 @@ struct Session {
     periods: Vec<Period>,
 }
 
-#[derive(Debug, PartialEq)]
+type Schedule = HashMap<Period, String>;
+
+#[derive(Debug, Eq, PartialEq, Clone, Hash)]
 enum Day {
     Monday,
     Tuesday,
@@ -98,6 +101,73 @@ fn parse_period_string(period: &str) -> Vec<Period> {
     periods
 }
 
+#[allow(ptr_arg)]
+fn get_section_periods(section: &Section) -> Vec<Period> {
+    let mut periods = Vec::new();
+
+    for session in section {
+        periods.append(&mut parse_period_string(session.as_str()));
+    }
+
+    periods
+}
+
+fn generate_schedules(options: &ScheduleOptions) {
+    generate_schedule_recursive(options, 0, Schedule::new());
+}
+
+fn generate_schedule_recursive(options: &ScheduleOptions, class_index: usize, schedule: Schedule) {
+    if class_index == options.classes.len() {
+        print_schedule(options, schedule);
+        return;
+    }
+
+    let class = &options.classes[class_index];
+    for section in &class.sections {
+        let mut new_schedule = schedule.clone();
+        let mut has_conflict = false;
+
+        let periods = get_section_periods(section);
+        for period in periods.into_iter() {
+            let conflict = new_schedule.insert(period, class.name.clone());
+            if conflict.is_some() {
+                has_conflict = true;
+                break;
+            }
+        }
+
+        if !has_conflict {
+            generate_schedule_recursive(options, class_index + 1, new_schedule);
+        }
+    }
+}
+
+fn print_schedule(options: &ScheduleOptions, schedule: Schedule) {
+    let days = vec![Day::Monday, Day::Tuesday, Day::Wednesday, Day::Thursday, Day::Friday];
+
+    println!("┌───┬───────────┬───────────┬───────────┬───────────┬───────────┐");
+    print!("│ # │");
+    for day in &days {
+        print!(" {:^9} │", format!("{:?}", day));
+    }
+    println!();
+    println!("├───┼───────────┼───────────┼───────────┼───────────┼───────────┤");
+    
+    for period in &options.periods {
+        print!("│{:2} │", period);
+        for day in &days {
+            match schedule.get(&Period(day.clone(), *period)) {
+                Some(class) => print!(" {:^9} │", class),
+                None => print!(" {:^9} │", " ")
+            } 
+        }
+        println!();
+    }
+
+    println!("└───┴───────────┴───────────┴───────────┴───────────┴───────────┘");
+    println!();
+}
+
 fn main() {
     let mut file = File::open("Classes.toml").expect("Failed to find Classes.toml!");
     let mut contents = String::new();
@@ -107,13 +177,7 @@ fn main() {
     let schedule_options: ScheduleOptions = toml::from_str(contents.as_str())
         .expect("Error parsing Classes.toml!");
 
-    for class in &schedule_options.classes {
-        for section in &class.sections {
-            for session in section {
-                parse_period_string(session.as_str());
-            }
-        }
-    }
+    generate_schedules(&schedule_options);
 }
 
 
@@ -139,6 +203,32 @@ mod tests {
                 Period(Day::Thursday, 5),
                 Period(Day::Tuesday,6),
                 Period(Day::Thursday, 6),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_get_section_periods() {
+        assert_eq!(
+            get_section_periods(&vec!["MWF3".to_string()]),
+            vec![
+                Period(Day::Monday, 3),
+                Period(Day::Wednesday, 3),
+                Period(Day::Friday, 3)
+            ]
+        );
+
+        assert_eq!(
+            get_section_periods(&vec![
+                "MWF3".to_string(),
+                "TR3".to_string()
+            ]),
+            vec![
+                Period(Day::Monday, 3),
+                Period(Day::Wednesday, 3),
+                Period(Day::Friday, 3),
+                Period(Day::Tuesday, 3),
+                Period(Day::Thursday, 3)
             ]
         );
     }
