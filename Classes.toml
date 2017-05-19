@@ -8,7 +8,7 @@ sections = [
 ]
 
 [[classes]]
-name = "calc"
+name = "phys"
 sections = [
     ["TR3", "W4"],
     ["TR4", "M3"]
