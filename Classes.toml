@@ -1,0 +1,15 @@
+periods = [1,2,3,4,5,6,7]
+
+[[classes]]
+name = "calc"
+sections = [
+    ["MWF3"],
+    ["MWF4-5"]
+]
+
+[[classes]]
+name = "calc"
+sections = [
+    ["TR3", "W4"],
+    ["TR4", "M3"]
+]
