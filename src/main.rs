@@ -32,21 +32,21 @@ struct Class {
 }
 
 /// A section, defined by a list of strings denoting days/periods
-/// 
+///
 /// # Example
 ///
 /// ```
 /// // A class in period 4 on Mon, Wed, and Fri,
-/// // and periods 5 and 6 on Tuesday. 
+/// // and periods 5 and 6 on Tuesday.
 /// let section: Section = vec!["MWF4", "T5-6"];
 /// ```
 type Section = Vec<String>;
 
-/// A pair of a single day and the numeric period 
+/// A pair of a single day and the numeric period
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
 struct Period(Day, u8);
 
-/// Just a map of Periods each day and the class during that period 
+/// Just a map of Periods each day and the class during that period
 type Schedule = HashMap<Period, String>;
 
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
@@ -90,7 +90,7 @@ fn parse_period_string(period: &str) -> Vec<Period> {
             .map(|end| u8::from_str(end.as_str()).unwrap())
             .unwrap_or(start_period);
 
-        // Range over all of the periods this session spans 
+        // Range over all of the periods this session spans
         let period_range = Range {
             start: start_period,
             end: end_period + 1,
@@ -106,7 +106,7 @@ fn parse_period_string(period: &str) -> Vec<Period> {
     periods
 }
 
-/// Gets all of the days/periods that the specified `section` spans. 
+/// Gets all of the days/periods that the specified `section` spans.
 ///
 /// # Parameters
 ///
@@ -124,25 +124,27 @@ fn get_section_periods(section: &Section) -> Vec<Period> {
 
 /// Begins the recursive process of generating all possible schedules
 ///
-/// # Paramters 
+/// # Paramters
 ///
-/// - `options`:     `ScheduleOptions` reference containing all classes, and available periods 
+/// - `options`:     `ScheduleOptions` reference containing all classes, and available periods
 fn generate_schedules(options: &ScheduleOptions) {
     generate_schedule_recursive(options, 0, &Schedule::new());
 }
 
 /// Recursive function for generating a schedule
 ///
-/// # Paramters 
+/// # Paramters
 ///
-/// - `options`:     `ScheduleOptions` reference containing all classes, and available periods 
+/// - `options`:     `ScheduleOptions` reference containing all classes, and available periods
 /// - `class_index`: The index of the class from the classes Vec to use for this level of recursion.
-///                  Should begin at zero. 
+///                  Should begin at zero.
 /// - `schedule`:    The currently generated schedule at this level of recursion.
-fn generate_schedule_recursive(options: &ScheduleOptions, class_index: usize, schedule: &Schedule) {
+fn generate_schedule_recursive(options: &ScheduleOptions,
+                               class_index: usize,
+                               schedule: &Schedule) {
     // If we've iterated over all available classes
     if class_index == options.classes.len() {
-        // Print the schedule and complete this recursion 
+        // Print the schedule and complete this recursion
         print_schedule(options, schedule);
         return;
     }
@@ -177,28 +179,32 @@ fn generate_schedule_recursive(options: &ScheduleOptions, class_index: usize, sc
 
 /// Prints a schedule in a nicely formatted table
 fn print_schedule(options: &ScheduleOptions, schedule: &Schedule) {
-    let days = vec![Day::Monday, Day::Tuesday, Day::Wednesday, Day::Thursday, Day::Friday];
+    let days = vec![Day::Monday,
+                    Day::Tuesday,
+                    Day::Wednesday,
+                    Day::Thursday,
+                    Day::Friday];
 
-    println!("┌───┬───────────┬───────────┬───────────┬───────────┬───────────┐");
+    println!("┌───┬───────────┬───────────┬───────────┬───────────┬───────────┐",);
     print!("│ # │");
     for day in &days {
         print!(" {:^9} │", format!("{:?}", day));
     }
     println!();
-    println!("├───┼───────────┼───────────┼───────────┼───────────┼───────────┤");
-    
+    println!("├───┼───────────┼───────────┼───────────┼───────────┼───────────┤",);
+
     for period in &options.periods {
         print!("│{:2} │", period);
         for day in &days {
             match schedule.get(&Period(day.clone(), *period)) {
                 Some(class) => print!(" {:^9} │", class),
-                None => print!(" {:^9} │", " ")
-            } 
+                None => print!(" {:^9} │", " "),
+            }
         }
         println!();
     }
 
-    println!("└───┴───────────┴───────────┴───────────┴───────────┴───────────┘");
+    println!("└───┴───────────┴───────────┴───────────┴───────────┴───────────┘",);
     println!();
 }
 
@@ -221,49 +227,30 @@ mod tests {
 
     #[test]
     fn test_parse_period_string() {
-        assert_eq!(
-            parse_period_string("MWF3"),
-            vec![
-                Period(Day::Monday, 3),
-                Period(Day::Wednesday, 3),
-                Period(Day::Friday, 3)
-            ]
-        );
+        assert_eq!(parse_period_string("MWF3"),
+                   vec![Period(Day::Monday, 3),
+                        Period(Day::Wednesday, 3),
+                        Period(Day::Friday, 3)]);
 
-        assert_eq!(
-            parse_period_string("TR5-6"),
-            vec![
-                Period(Day::Tuesday,5),
-                Period(Day::Thursday, 5),
-                Period(Day::Tuesday,6),
-                Period(Day::Thursday, 6),
-            ]
-        );
+        assert_eq!(parse_period_string("TR5-6"),
+                   vec![Period(Day::Tuesday, 5),
+                        Period(Day::Thursday, 5),
+                        Period(Day::Tuesday, 6),
+                        Period(Day::Thursday, 6)]);
     }
 
     #[test]
     fn test_get_section_periods() {
-        assert_eq!(
-            get_section_periods(&vec!["MWF3".to_string()]),
-            vec![
-                Period(Day::Monday, 3),
-                Period(Day::Wednesday, 3),
-                Period(Day::Friday, 3)
-            ]
-        );
+        assert_eq!(get_section_periods(&vec!["MWF3".to_string()]),
+                   vec![Period(Day::Monday, 3),
+                        Period(Day::Wednesday, 3),
+                        Period(Day::Friday, 3)]);
 
-        assert_eq!(
-            get_section_periods(&vec![
-                "MWF3".to_string(),
-                "TR3".to_string()
-            ]),
-            vec![
-                Period(Day::Monday, 3),
-                Period(Day::Wednesday, 3),
-                Period(Day::Friday, 3),
-                Period(Day::Tuesday, 3),
-                Period(Day::Thursday, 3)
-            ]
-        );
+        assert_eq!(get_section_periods(&vec!["MWF3".to_string(), "TR3".to_string()]),
+                   vec![Period(Day::Monday, 3),
+                        Period(Day::Wednesday, 3),
+                        Period(Day::Friday, 3),
+                        Period(Day::Tuesday, 3),
+                        Period(Day::Thursday, 3)]);
     }
 }
