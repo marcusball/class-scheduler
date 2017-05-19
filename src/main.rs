@@ -46,14 +46,6 @@ type Section = Vec<String>;
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
 struct Period(Day, u8);
 
-struct Session {
-    /// The name of the class for this session
-    class: String,
-
-    /// The periods this session spans
-    periods: Vec<Period>,
-}
-
 /// Just a map of Periods each day and the class during that period 
 type Schedule = HashMap<Period, String>;
 
@@ -118,7 +110,7 @@ fn parse_period_string(period: &str) -> Vec<Period> {
 ///
 /// # Parameters
 ///
-/// - section: Vector of strings denoting the days and periods of a section
+/// - `section`: Vector of strings denoting the days and periods of a section
 #[allow(ptr_arg)]
 fn get_section_periods(section: &Section) -> Vec<Period> {
     let mut periods = Vec::new();
@@ -134,20 +126,20 @@ fn get_section_periods(section: &Section) -> Vec<Period> {
 ///
 /// # Paramters 
 ///
-/// - options:     ScheduleOptions reference containing all classes, and available periods 
+/// - `options`:     `ScheduleOptions` reference containing all classes, and available periods 
 fn generate_schedules(options: &ScheduleOptions) {
-    generate_schedule_recursive(options, 0, Schedule::new());
+    generate_schedule_recursive(options, 0, &Schedule::new());
 }
 
 /// Recursive function for generating a schedule
 ///
 /// # Paramters 
 ///
-/// - options:     ScheduleOptions reference containing all classes, and available periods 
-/// - class_index: The index of the class from the classes Vec to use for this level of recursion
-///                Should begin at zero. 
-/// - schedule:    The currently generated schedule at this level of recursion.
-fn generate_schedule_recursive(options: &ScheduleOptions, class_index: usize, schedule: Schedule) {
+/// - `options`:     `ScheduleOptions` reference containing all classes, and available periods 
+/// - `class_index`: The index of the class from the classes Vec to use for this level of recursion.
+///                  Should begin at zero. 
+/// - `schedule`:    The currently generated schedule at this level of recursion.
+fn generate_schedule_recursive(options: &ScheduleOptions, class_index: usize, schedule: &Schedule) {
     // If we've iterated over all available classes
     if class_index == options.classes.len() {
         // Print the schedule and complete this recursion 
@@ -166,7 +158,7 @@ fn generate_schedule_recursive(options: &ScheduleOptions, class_index: usize, sc
         let periods = get_section_periods(section);
 
         // Attempt to add all of this section's periods to the schedule
-        for period in periods.into_iter() {
+        for period in periods {
             let conflict = new_schedule.insert(period, class.name.clone());
 
             // If there was already a class during that day/period, then there's a conflict
@@ -178,13 +170,13 @@ fn generate_schedule_recursive(options: &ScheduleOptions, class_index: usize, sc
 
         // If there's no conflict, continue and try to add the next class to the schedule
         if !has_conflict {
-            generate_schedule_recursive(options, class_index + 1, new_schedule);
+            generate_schedule_recursive(options, class_index + 1, &new_schedule);
         }
     }
 }
 
 /// Prints a schedule in a nicely formatted table
-fn print_schedule(options: &ScheduleOptions, schedule: Schedule) {
+fn print_schedule(options: &ScheduleOptions, schedule: &Schedule) {
     let days = vec![Day::Monday, Day::Tuesday, Day::Wednesday, Day::Thursday, Day::Friday];
 
     println!("┌───┬───────────┬───────────┬───────────┬───────────┬───────────┐");
